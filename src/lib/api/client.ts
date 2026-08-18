@@ -27,7 +27,7 @@ export function buildUrl(
 
 /**
  * A request that reached the API and came back an error. `status` is what lets
- * a caller tell a 404 from a network failure: `/watch?v=` for a deleted video
+ * a caller tell a 404 from a network failure: `/watch/?v=` for a deleted video
  * has to say the video is gone, not that the library is down.
  */
 export class ApiError extends Error {

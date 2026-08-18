@@ -7,7 +7,7 @@ export interface Presenter {
 }
 
 export interface Video {
-  /** Identity everywhere, including `/watch?v=`. */
+  /** Identity everywhere, including `/watch/?v=`. */
   youtubeId: string;
   title: string;
   /** Names come from the roster. */

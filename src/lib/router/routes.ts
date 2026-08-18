@@ -15,8 +15,8 @@ import Watch from "../../routes/Watch.svelte";
  */
 export const routes: Record<string, Component> = {
   "/": Home,
-  "/events": Events,
-  "/presenters": Presenters,
-  "/search": Search,
-  "/watch": Watch,
+  "/events/": Events,
+  "/presenters/": Presenters,
+  "/search/": Search,
+  "/watch/": Watch,
 };

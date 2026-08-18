@@ -26,12 +26,12 @@ describe("SearchBar", () => {
     });
     await fireEvent.submit(container.querySelector("form")!);
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(new URLSearchParams(location.search).get("q")).toBe("apl");
   });
 
   it("takes the input's value from the URL", () => {
-    setUrl("/search?q=tacit");
+    setUrl("/search/?q=tacit");
     render(SearchBar);
 
     expect(screen.getByRole("searchbox")).toHaveValue("tacit");
@@ -49,7 +49,7 @@ describe("SearchBar", () => {
   });
 
   it("steps down to an h2 on a watch page, where the video title is the h1", () => {
-    setUrl("/watch?v=abc");
+    setUrl("/watch/?v=abc");
     render(SearchBar);
 
     expect(

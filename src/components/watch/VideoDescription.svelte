@@ -32,7 +32,7 @@
               target="_blank"
               rel="noopener noreferrer">{token.text}</a
             >{:else}<Link
-              href={`/watch?v=${youtubeId}&time=${token.seconds}`}
+              href={`/watch/?v=${youtubeId}&time=${token.seconds}`}
               title={`Play from ${token.text}`}>{token.text}</Link
             >{/if}
         {/each}

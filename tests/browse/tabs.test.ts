@@ -32,11 +32,11 @@ describe("the browse strip", () => {
     );
     expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute(
       "href",
-      "/events",
+      "/events/",
     );
     expect(screen.getByRole("link", { name: "Presenters" })).toHaveAttribute(
       "href",
-      "/presenters",
+      "/presenters/",
     );
   });
 

@@ -30,7 +30,7 @@ describe("performSearch", () => {
     const navigate = vi.fn();
     performSearch(navigate)(formLike({ q: "apl" }), [], "", "", "newest");
 
-    expect(navigatedTo(navigate).pathname).toBe("/search");
+    expect(navigatedTo(navigate).pathname).toBe("/search/");
   });
 
   it("navigates to the target pathname when given one", () => {
@@ -181,7 +181,7 @@ describe("performSearch", () => {
     performSearch(navigate)(formLike({ q: "apl" }), [], "", "", "newest");
 
     const [url] = navigate.mock.calls[0] as [string];
-    expect(url.startsWith("/search?")).toBe(true);
+    expect(url.startsWith("/search/?")).toBe(true);
     expect(url).not.toContain("http");
     expect(url).not.toContain("localhost");
   });

@@ -28,7 +28,7 @@ export function presenterLabels(ids: number[]): PresenterLabel[] {
  * so it always carried 20.
  */
 export function presenterHref(id: number): string {
-  return `/search?${serialiseFilters({ presenterIds: [id] }).toString()}`;
+  return `/search/?${serialiseFilters({ presenterIds: [id] }).toString()}`;
 }
 
 export interface EventLabel {
@@ -48,7 +48,7 @@ export function eventLabels(slugs: string[]): EventLabel[] {
 }
 
 export function eventHref(shortname: string): string {
-  return `/search?${serialiseFilters({ event: shortname }).toString()}`;
+  return `/search/?${serialiseFilters({ event: shortname }).toString()}`;
 }
 
 /** dvl joins a pair with an ampersand and three or more with commas. */

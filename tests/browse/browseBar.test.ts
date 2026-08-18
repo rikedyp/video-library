@@ -41,7 +41,7 @@ describe("BrowseBar", () => {
 
   describe("on results", () => {
     it("counts what the filters matched rather than the library", () => {
-      setUrl("/search?q=apl");
+      setUrl("/search/?q=apl");
       const { rerender } = render(BrowseBar);
       expect(screen.getByText("Searching...")).toBeInTheDocument();
 
@@ -50,7 +50,7 @@ describe("BrowseBar", () => {
     });
 
     it("says one result, not 1 results", () => {
-      setUrl("/search?q=apl");
+      setUrl("/search/?q=apl");
       render(BrowseBar, { props: { total: 1 } });
 
       expect(screen.getByText("Showing 1 result")).toBeInTheDocument();
@@ -68,14 +68,14 @@ describe("BrowseBar", () => {
     const back = () => screen.queryByRole("button", { name: /Back/ });
 
     it("appears on results reached from somewhere", () => {
-      navigate("/search?q=apl");
+      navigate("/search/?q=apl");
       render(BrowseBar);
 
       expect(back()).toBeInTheDocument();
     });
 
     it("returns to where the question was asked", async () => {
-      navigate("/search?q=apl");
+      navigate("/search/?q=apl");
       render(BrowseBar);
 
       await userEvent.click(back()!);
@@ -99,7 +99,7 @@ describe("BrowseBar", () => {
     });
 
     it("stays off a cold deep link, where Back would leave the app", () => {
-      setUrl("/search?q=apl");
+      setUrl("/search/?q=apl");
       render(BrowseBar);
 
       expect(back()).toBeNull();

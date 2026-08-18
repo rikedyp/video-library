@@ -100,7 +100,7 @@
 </script>
 
 {#snippet feature(video: Video, hero: boolean, eyebrow: string)}
-  <Link href={`/watch?v=${video.youtubeId}`}>
+  <Link href={`/watch/?v=${video.youtubeId}`}>
     <span class={["thumb", hero ? "hero" : "secondary"]}>
       <img src={video.thumbnail} alt="" loading="lazy" decoding="async" />
       <span class="scrim"></span>

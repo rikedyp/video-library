@@ -21,19 +21,19 @@ afterEach(() => {
 describe("rendering", () => {
   it("renders a real anchor with the href", () => {
     setUrl("/");
-    render(LinkHost, { props: { href: "/search?q=apl" } });
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/search?q=apl");
+    render(LinkHost, { props: { href: "/search/?q=apl" } });
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/search/?q=apl");
   });
 });
 
 describe("interception", () => {
   it("a plain left click navigates without a page load", async () => {
     setUrl("/");
-    render(LinkHost, { props: { href: "/search?q=apl" } });
+    render(LinkHost, { props: { href: "/search/?q=apl" } });
 
     await fireEvent.click(screen.getByRole("link"));
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(location.search).toBe("?q=apl");
   });
 
@@ -41,7 +41,7 @@ describe("interception", () => {
     "%s lets the browser handle the click",
     async (modifier) => {
       setUrl("/");
-      render(LinkHost, { props: { href: "/watch?v=1" } });
+      render(LinkHost, { props: { href: "/watch/?v=1" } });
 
       await fireEvent.click(screen.getByRole("link"), { [modifier]: true });
 
@@ -51,7 +51,7 @@ describe("interception", () => {
 
   it("a middle click (button 1) lets the browser handle it", async () => {
     setUrl("/");
-    render(LinkHost, { props: { href: "/watch?v=1" } });
+    render(LinkHost, { props: { href: "/watch/?v=1" } });
 
     await fireEvent.click(screen.getByRole("link"), { button: 1 });
 
@@ -60,7 +60,7 @@ describe("interception", () => {
 
   it("target=_blank lets the browser handle it", async () => {
     setUrl("/");
-    render(LinkHost, { props: { href: "/watch?v=1", target: "_blank" } });
+    render(LinkHost, { props: { href: "/watch/?v=1", target: "_blank" } });
 
     await fireEvent.click(screen.getByRole("link"));
 
@@ -69,7 +69,7 @@ describe("interception", () => {
 
   it("a handler that already called preventDefault is left alone", async () => {
     setUrl("/");
-    render(LinkPreventedHost, { props: { href: "/watch?v=1" } });
+    render(LinkPreventedHost, { props: { href: "/watch/?v=1" } });
 
     await fireEvent.click(screen.getByRole("button"));
 
@@ -79,18 +79,18 @@ describe("interception", () => {
   it("runs a caller's onclick before navigating", async () => {
     setUrl("/");
     const spy = vi.fn();
-    render(LinkHost, { props: { href: "/watch?v=1", onclick: spy } });
+    render(LinkHost, { props: { href: "/watch/?v=1", onclick: spy } });
 
     await fireEvent.click(screen.getByRole("link"));
 
     expect(spy).toHaveBeenCalledOnce();
-    expect(location.pathname).toBe("/watch");
+    expect(location.pathname).toBe("/watch/");
   });
 
   it("a caller's onclick can preventDefault to keep the click", async () => {
     setUrl("/");
     const onclick = (event: MouseEvent) => event.preventDefault();
-    render(LinkHost, { props: { href: "/watch?v=1", onclick } });
+    render(LinkHost, { props: { href: "/watch/?v=1", onclick } });
 
     await fireEvent.click(screen.getByRole("link"));
 
@@ -128,13 +128,13 @@ describe("basename", () => {
     const { location: freshLocation } =
       await import("../../src/lib/router/location.svelte");
 
-    freshRender(FreshLinkHost, { props: { href: "/search?q=apl" } });
+    freshRender(FreshLinkHost, { props: { href: "/search/?q=apl" } });
     const link = freshScreen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/video-library/search?q=apl");
+    expect(link).toHaveAttribute("href", "/video-library/search/?q=apl");
 
     await freshFireEvent.click(link);
 
-    expect(freshLocation.pathname).toBe("/search");
+    expect(freshLocation.pathname).toBe("/search/");
   });
 
   it("does not prepend the basename twice to an href that already carries it", async () => {
@@ -148,12 +148,12 @@ describe("basename", () => {
     // Scoped to this render's container: the reimported testing-library has
     // its own cleanup registry, so the case above is still in the document.
     const { container } = freshRender(FreshLinkHost, {
-      props: { href: "/video-library/search" },
+      props: { href: "/video-library/search/" },
     });
 
     expect(container.querySelector("a")).toHaveAttribute(
       "href",
-      "/video-library/search",
+      "/video-library/search/",
     );
   });
 });

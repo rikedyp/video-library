@@ -99,7 +99,7 @@ describe("the way back", () => {
   it("offers Back when the viewer arrived through the app", async () => {
     setUrl("?v=vid001");
     // A push of ours behind this entry, which is what makes Back ours to offer.
-    window.history.pushState({ key: "k", depth: 1 }, "", "/watch?v=vid001");
+    window.history.pushState({ key: "k", depth: 1 }, "", "/watch/?v=vid001");
     window.dispatchEvent(
       new PopStateEvent("popstate", { state: { key: "k", depth: 1 } }),
     );
@@ -170,7 +170,7 @@ describe("the description", () => {
 
     expect(await screen.findByRole("link", { name: "8:55" })).toHaveAttribute(
       "href",
-      "/watch?v=vid001&time=535",
+      "/watch/?v=vid001&time=535",
     );
   });
 

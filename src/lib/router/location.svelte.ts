@@ -17,6 +17,13 @@ interface HistoryState {
 const basename = configuredBasename.replace(/\/+$/, "");
 
 /**
+ * WordPress redirects a bare page load to add a trailing slash.
+ */
+function ensureTrailingSlash(pathname: string): string {
+  return pathname.endsWith("/") ? pathname : `${pathname}/`;
+}
+
+/**
  * `action` has no counterpart in the native history API, and the scroll policy
  * needs it to leave back/forward alone. `key` identifies the history entry,
  * which is what the scroll restore keys its stored positions by. `depth` is
@@ -135,23 +142,26 @@ export function back(): void {
 
 /** Browser pathname to app pathname. Idempotent: app paths pass through. */
 export function stripBasename(pathname: string): string {
-  if (basename === "") return pathname;
+  if (basename === "") return ensureTrailingSlash(pathname);
   if (pathname === basename) return "/";
   if (pathname.startsWith(`${basename}/`))
-    return pathname.slice(basename.length);
-  return pathname;
+    return ensureTrailingSlash(pathname.slice(basename.length));
+  return ensureTrailingSlash(pathname);
 }
 
 /** App pathname to browser pathname. */
 export function addBasename(pathname: string): string {
   if (basename === "") return pathname;
-  return pathname === "/" ? basename : `${basename}${pathname}`;
+  return pathname === "/" ? `${basename}/` : `${basename}${pathname}`;
 }
 
 /** Splits a `pathname?search` string; `URL` needs a base for the relative form. */
 function splitUrl(url: string): { pathname: string; search: string } {
   const parsed = new URL(url, "http://dummy-base.invalid");
-  return { pathname: parsed.pathname, search: parsed.search };
+  return {
+    pathname: ensureTrailingSlash(parsed.pathname),
+    search: parsed.search,
+  };
 }
 
 function createKey(): string {

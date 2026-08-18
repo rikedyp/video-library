@@ -17,7 +17,7 @@
 <article class="card">
   <!-- Thumbnail and title are one link, so the grid is one tab stop per card.
        The image is decorative: the title beside it names the destination. -->
-  <Link href={`/watch?v=${video.youtubeId}`}>
+  <Link href={`/watch/?v=${video.youtubeId}`}>
     <img src={video.thumbnail} alt="" loading="lazy" decoding="async" />
     <h3>{video.title}</h3>
   </Link>

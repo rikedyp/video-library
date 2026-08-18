@@ -75,9 +75,9 @@ describe("FeaturedStrip", () => {
       .getAllByRole("link")
       .map((a) => a.getAttribute("href"));
     expect(links).toEqual([
-      "/watch?v=vid001",
-      "/watch?v=vid002",
-      "/watch?v=vid003",
+      "/watch/?v=vid001",
+      "/watch/?v=vid002",
+      "/watch/?v=vid003",
       "/?event=dyalog-22",
     ]);
   });

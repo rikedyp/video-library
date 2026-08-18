@@ -32,7 +32,7 @@ describe("the shell", () => {
     setUrl("/nothing-here");
     render(App);
 
-    expect(location.pathname).toBe("/nothing-here");
+    expect(location.pathname).toBe("/nothing-here/");
     expect(screen.getByText("Browse all")).toBeInTheDocument();
   });
 

@@ -34,7 +34,7 @@ describe("the presenter list", () => {
 
     expect(link).toHaveAttribute(
       "href",
-      "/search?pg=1&presenter_id=1&sort=newest&perpage=18",
+      "/search/?pg=1&presenter_id=1&sort=newest&perpage=18",
     );
   });
 

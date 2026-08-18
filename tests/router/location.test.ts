@@ -19,17 +19,17 @@ afterEach(() => {
 
 describe("reading the location", () => {
   it("leaves pathname alone when the basename is /", async () => {
-    setUrl("/search?q=apl");
+    setUrl("/search/?q=apl");
     const { location } = await loadLocationModule();
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(location.search).toBe("?q=apl");
   });
 
   it("strips a real basename", async () => {
     vi.stubEnv("VITE_BASENAME", "/video-library");
-    setUrl("/video-library/search?q=apl");
+    setUrl("/video-library/search/?q=apl");
     const { location } = await loadLocationModule();
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(location.search).toBe("?q=apl");
   });
 
@@ -44,7 +44,7 @@ describe("reading the location", () => {
     vi.stubEnv("VITE_BASENAME", "/video-library/");
     setUrl("/video-library/search");
     const { location } = await loadLocationModule();
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
   });
 
   it("seeds a key on the initial entry", async () => {
@@ -75,10 +75,10 @@ describe("navigate", () => {
     setUrl("/video-library");
     const { location, navigate } = await loadLocationModule();
 
-    navigate("/search?q=apl");
+    navigate("/search/?q=apl");
 
-    expect(window.location.pathname).toBe("/video-library/search");
-    expect(location.pathname).toBe("/search");
+    expect(window.location.pathname).toBe("/video-library/search/");
+    expect(location.pathname).toBe("/search/");
   });
 
   it("prepends the bare basename for the root path", async () => {
@@ -88,7 +88,7 @@ describe("navigate", () => {
 
     navigate("/");
 
-    expect(window.location.pathname).toBe("/video-library");
+    expect(window.location.pathname).toBe("/video-library/");
   });
 
   it("pushes by default: action PUSH, history.length grows", async () => {
@@ -96,7 +96,7 @@ describe("navigate", () => {
     const { location, navigate } = await loadLocationModule();
     const before = window.history.length;
 
-    navigate("/search");
+    navigate("/search/");
 
     expect(location.action).toBe("PUSH");
     expect(window.history.length).toBe(before + 1);
@@ -130,10 +130,10 @@ describe("popstate", () => {
     const { location } = await loadLocationModule();
 
     const priorState = { key: "abc123" };
-    window.history.pushState(priorState, "", "/watch?id=1");
+    window.history.pushState(priorState, "", "/watch/?id=1");
     window.dispatchEvent(new PopStateEvent("popstate", { state: priorState }));
 
-    expect(location.pathname).toBe("/watch");
+    expect(location.pathname).toBe("/watch/");
     expect(location.search).toBe("?id=1");
     expect(location.action).toBe("POP");
     expect(location.key).toBe("abc123");
@@ -143,7 +143,7 @@ describe("popstate", () => {
     setUrl("/");
     const { location } = await loadLocationModule();
 
-    window.history.pushState(null, "", "/watch?id=1");
+    window.history.pushState(null, "", "/watch/?id=1");
     window.dispatchEvent(new PopStateEvent("popstate", { state: null }));
 
     // Written back, so returning to this entry a second time reads the same
@@ -161,7 +161,7 @@ describe("popstate", () => {
     window.history.pushState(priorState, "", "/video-library/search");
     window.dispatchEvent(new PopStateEvent("popstate", { state: priorState }));
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
   });
 });
 
@@ -222,7 +222,7 @@ describe("depth", () => {
     const { location, navigate } = await loadLocationModule();
     expect(location.depth).toBe(0);
 
-    navigate("/watch?v=vid001");
+    navigate("/watch/?v=vid001");
     expect(location.depth).toBe(1);
 
     navigate("/events");
@@ -233,8 +233,8 @@ describe("depth", () => {
     setUrl("/");
     const { location, navigate } = await loadLocationModule();
 
-    navigate("/search?q=apl");
-    navigate("/search?q=apl&sort=oldest", { replace: true });
+    navigate("/search/?q=apl");
+    navigate("/search/?q=apl&sort=oldest", { replace: true });
 
     expect(location.depth).toBe(1);
   });
@@ -257,7 +257,7 @@ describe("depth", () => {
     const { location, navigate } = await loadLocationModule();
     navigate("/events");
 
-    window.history.pushState(null, "", "/watch?v=vid001");
+    window.history.pushState(null, "", "/watch/?v=vid001");
     window.dispatchEvent(new PopStateEvent("popstate", { state: null }));
 
     expect(location.depth).toBe(0);

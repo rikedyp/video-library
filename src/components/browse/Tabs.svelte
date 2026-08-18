@@ -17,9 +17,9 @@
     // /search renders the same view with filters in the URL, so it is this
     // destination rather than a place of its own. /watch is a single video and
     // is covered by nothing: no destination is current there.
-    { label: "Videos", href: "/", covers: ["/", "/search"] },
-    { label: "Events", href: "/events", covers: ["/events"] },
-    { label: "Presenters", href: "/presenters", covers: ["/presenters"] },
+    { label: "Videos", href: "/", covers: ["/", "/search/"] },
+    { label: "Events", href: "/events/", covers: ["/events/"] },
+    { label: "Presenters", href: "/presenters/", covers: ["/presenters/"] },
   ];
 </script>
 

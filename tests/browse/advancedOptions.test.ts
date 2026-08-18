@@ -107,7 +107,7 @@ describe("the three columns together", () => {
 
     await userEvent.selectOptions(screen.getByLabelText("Event"), "dyalog-22");
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(params().get("event")).toBe("dyalog-22");
   });
 

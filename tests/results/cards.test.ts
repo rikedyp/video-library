@@ -35,7 +35,7 @@ describe("VideoCard", () => {
     render(VideoCard, { props: { video } });
 
     const link = screen.getByRole("link", { name: /Introduction to APL/ });
-    expect(link).toHaveAttribute("href", "/watch?v=vid001");
+    expect(link).toHaveAttribute("href", "/watch/?v=vid001");
     // Decorative: the title in the same link names the destination.
     expect(screen.getByRole("presentation")).toHaveAttribute("alt", "");
   });
@@ -131,7 +131,7 @@ describe("VideoRow", () => {
 
     const toWatch = screen
       .getAllByRole("link")
-      .filter((link) => link.getAttribute("href") === "/watch?v=vid001");
+      .filter((link) => link.getAttribute("href") === "/watch/?v=vid001");
     expect(toWatch).toHaveLength(2);
   });
 

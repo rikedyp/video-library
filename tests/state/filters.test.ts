@@ -63,11 +63,11 @@ describe("setFilters", () => {
   });
 
   it("writes to the route the user is on", () => {
-    setUrl("/watch?v=vid001");
+    setUrl("/watch/?v=vid001");
 
     setFilters({ q: "apl" });
 
-    expect(location.pathname).toBe("/watch");
+    expect(location.pathname).toBe("/watch/");
   });
 
   it("writes to another route when given one", () => {
@@ -75,7 +75,7 @@ describe("setFilters", () => {
 
     setFilters({ q: "apl" }, { pathname: "/search" });
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(currentParams().get("q")).toBe("apl");
   });
 

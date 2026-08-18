@@ -12,7 +12,7 @@
   let { video }: { video: Video } = $props();
 
   const presenters = $derived(presenterLabels(video.presenterIds));
-  const watch = $derived(`/watch?v=${video.youtubeId}`);
+  const watch = $derived(`/watch/?v=${video.youtubeId}`);
 </script>
 
 <article class="row">

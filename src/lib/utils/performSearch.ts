@@ -61,7 +61,7 @@ function asList(value: string | string[] | null): string[] {
  *   wants; browse pages pass their own path so the Search button and the Sort
  *   control do not navigate off the page they are on.
  */
-export function performSearch(navigate: Navigate, targetPath = "/search") {
+export function performSearch(navigate: Navigate, targetPath = "/search/") {
   return (
     trigger: Trigger,
     presenters: Presenter[] = [],

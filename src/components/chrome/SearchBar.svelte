@@ -11,7 +11,7 @@
   const PANEL_ID = "video-library-advanced-options";
 
   // On a watch page the video title is the h1, so the band steps down to h2.
-  const heading = $derived(location.pathname === "/watch" ? "h2" : "h1");
+  const heading = $derived(location.pathname === "/watch/" ? "h2" : "h1");
 
   // Follows the URL, so clicking a presenter name updates the box. Read
   // through parseFilters: browseFilters.ts is the only home for the vocabulary.

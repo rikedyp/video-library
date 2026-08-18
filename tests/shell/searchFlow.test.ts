@@ -32,7 +32,7 @@ describe("the featured strip", () => {
   });
 
   it("is not on a search", async () => {
-    setUrl("/search?q=apl");
+    setUrl("/search/?q=apl");
     render(App);
 
     await screen.findByText(/Showing \d+ results/);
@@ -63,7 +63,7 @@ describe("clicking a presenter credit", () => {
 
     await userEvent.click(await firstCredit("John Smith"));
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(new URLSearchParams(location.search).get("presenter_id")).toBe("1");
 
     // The panel opens because an advanced filter arrived, and the token is a
@@ -74,7 +74,7 @@ describe("clicking a presenter credit", () => {
   });
 
   it("replaces the query rather than narrowing it further", async () => {
-    setUrl("/search?q=apl");
+    setUrl("/search/?q=apl");
     render(App);
 
     await userEvent.click(await firstCredit("John Smith"));
@@ -91,7 +91,7 @@ describe("clicking an event credit", () => {
 
     await userEvent.click(await firstCredit("Dyalog '22"));
 
-    expect(location.pathname).toBe("/search");
+    expect(location.pathname).toBe("/search/");
     expect(new URLSearchParams(location.search).get("event")).toBe("dyalog-22");
 
     const select = await screen.findByLabelText<HTMLSelectElement>("Event");
@@ -101,7 +101,7 @@ describe("clicking an event credit", () => {
 
 describe("getting back to the front page", () => {
   it("is what the Videos tab does from a search", async () => {
-    setUrl("/search?q=apl&event=dyalog-22");
+    setUrl("/search/?q=apl&event=dyalog-22");
     render(App);
 
     await userEvent.click(screen.getByRole("link", { name: "Videos" }));
@@ -112,7 +112,7 @@ describe("getting back to the front page", () => {
   });
 
   it("is what the Video Library heading does", async () => {
-    setUrl("/search?q=apl");
+    setUrl("/search/?q=apl");
     render(App);
 
     // The heading holds a non-breaking space, which \s matches and " " does not.
