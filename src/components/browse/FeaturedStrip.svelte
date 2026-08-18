@@ -131,7 +131,9 @@
           {/each}
 
           {#if loaded.event}
-            <Link href={`/?event=${encodeURIComponent(loaded.event.slug)}`}>
+            <Link
+              href={`/?pg=1&sort=newest&perpage+18&event=${encodeURIComponent(loaded.event.slug)}`}
+            >
               <span class="event">
                 <span class="eyebrow">FROM THIS EVENT</span>
                 <span class="event-name">{loaded.event.name}</span>

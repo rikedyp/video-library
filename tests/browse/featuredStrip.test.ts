@@ -78,7 +78,7 @@ describe("FeaturedStrip", () => {
       "/watch/?v=vid001",
       "/watch/?v=vid002",
       "/watch/?v=vid003",
-      "/?event=dyalog-22",
+      "/?pg=1&sort=newest&perpage+18&event=dyalog-22",
     ]);
   });
 
