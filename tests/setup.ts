@@ -16,6 +16,14 @@ installAnimate();
 // sentinel installs its own, which it can fire.
 installIntersectionObserver();
 
+// jsdom's window.scrollTo reports "not implemented" to its console on every
+// call, and the router scrolls on each settled navigation.
+Object.defineProperty(window, "scrollTo", {
+  value: () => {},
+  writable: true,
+  configurable: true,
+});
+
 // A request to a URL no handler matches fails the test by name, rather than resolving to nothing and mysteriously rendering empty later.
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
