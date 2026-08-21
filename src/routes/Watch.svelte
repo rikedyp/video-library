@@ -158,46 +158,53 @@
     >.
   </p>
 {:else if video}
-  <!-- Keyed on the id: consent is asked again per video, and the iframe is
-       replaced rather than reused. -->
-  {#key youtubeId}
-    <ConsentPlayer
-      {youtubeId}
-      title={`Watch YouTube video ${video.title}`}
-      thumbnail={video.thumbnail}
-      {startSeconds}
-    />
-  {/key}
-
+  <!-- The player and what it is are one card, as a thumbnail and its title are
+       on every other surface. -->
   <article class="detail">
-    <h1>{video.title}</h1>
+    <!-- Keyed on the id: consent is asked again per video, and the iframe is
+         replaced rather than reused. -->
+    {#key youtubeId}
+      <ConsentPlayer
+        {youtubeId}
+        title={`Watch YouTube video ${video.title}`}
+        thumbnail={video.thumbnail}
+        {startSeconds}
+      />
+    {/key}
 
-    {#if presenters.length > 0}
-      <p class="presenters">
-        {#each presenters as presenter, index (presenter.id)}
-          <Link href={presenterHref(presenter.id)}>{presenter.label}</Link
-          >{separator(index, presenters.length)}
-        {/each}
-      </p>
-    {/if}
+    <div class="body">
+      <h1>{video.title}</h1>
 
-    <p class="meta">
-      <span>{formatDate(video.presentedAt, "long")}</span>
-      {#if video.eventSlug}
-        <span>
-          in <Link href={eventHref(video.eventSlug)}
-            >{video.event || video.eventSlug}</Link
-          >
-        </span>
+      {#if presenters.length > 0}
+        <p class="presenters">
+          {#each presenters as presenter, index (presenter.id)}
+            <Link href={presenterHref(presenter.id)}>{presenter.label}</Link
+            >{separator(index, presenters.length)}
+          {/each}
+        </p>
       {/if}
-    </p>
 
-    <VideoDescription description={video.description} {youtubeId} />
+      <p class="meta">
+        <span>{formatDate(video.presentedAt, "long")}</span>
+        {#if video.eventSlug}
+          <span>
+            in <Link href={eventHref(video.eventSlug)}
+              >{video.event || video.eventSlug}</Link
+            >
+          </span>
+        {/if}
+      </p>
+
+      <hr />
+
+      <VideoDescription description={video.description} {youtubeId} />
+    </div>
   </article>
 
   {#if suggestions.length > 0}
-    <h2 class="suggested">Suggested videos</h2>
-    <hr />
+    <!-- The rule is the heading's own bottom edge, as it is on the browse bar. A
+         separate <hr /> put its own margins between the two. -->
+    <h2 class="suggested">Suggested Videos</h2>
     <ResultGrid items={suggestions} />
   {/if}
 {/if}
@@ -212,8 +219,8 @@
     border: 0;
     background: none;
     color: var(--dyalog-video-library-link);
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-bold);
     text-decoration: none;
     cursor: pointer;
   }
@@ -229,34 +236,81 @@
     color: var(--dyalog-video-library-muted);
   }
 
+  /* A card, from the same tokens as the ones on every other surface. The resting
+     shadow only: there is nothing to hover here, the page is already the video.
+     overflow clips the player's square corners to the card's radius. */
+  /* The bottom margin is what sets the heading below it off the card, exactly as
+     the featured strip's does for the browse bar. Without it the heading has only
+     its own 0.625rem and sits far tighter here than it does there. */
   .detail {
     margin-top: 0.75rem;
-    padding: 0.75rem;
+    margin-bottom: var(--dyalog-video-library-strip-gap);
     border: 1px solid var(--dyalog-video-library-card-border);
     border-radius: var(--dyalog-video-library-radius);
     background: var(--dyalog-video-library-surface);
-    box-shadow: var(--dyalog-video-library-card-hover-shadow);
+    box-shadow: var(--dyalog-video-library-card-shadow);
+    overflow: hidden;
   }
 
-  h1 {
-    margin-bottom: 0.75rem;
-    font-size: 2em;
+  /* A touch more than the 0.75rem a card uses: this text is the page rather than
+     one tile in a grid, and it sits under a full-width player. */
+  .body {
+    padding: 1.375rem 1.375rem 0.75rem;
   }
 
+  /* A card's weight, a size above a card's: this is the page's own heading, not
+     one of many in a grid. */
+  :global(#dyalog-video-library) h1 {
+    margin-bottom: 0.25rem;
+    font-size: var(--dyalog-video-library-size-2xl);
+    font-weight: var(--dyalog-video-library-weight-regular);
+  }
+
+  /* Credits and meta, as a card states them. */
   .presenters {
-    font-weight: 700;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    line-height: var(--dyalog-video-library-meta-line-height);
   }
 
   .meta {
     display: flex;
     justify-content: space-between;
     margin: 0.75rem 0;
-    font-weight: 700;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    line-height: var(--dyalog-video-library-meta-line-height);
+    color: var(--dyalog-video-library-muted);
   }
 
-  .suggested {
-    padding-top: 1rem;
-    font-weight: 700;
+  /* Inside the card, where 1.25rem would be a gulf. */
+  .body hr {
+    margin: 0.75rem 0;
+  }
+
+  /*
+   * Reads as the Browse line does: the same step, weight and label colour.
+   *
+   * The spacing is the browse bar's too: 0.625rem above and below the text with
+   * the rule as its bottom border, and 0.875rem before what follows.
+   *
+   * Restated here rather than taking the .video-library-label class, because
+   * this is a heading and the reset in app.css reverts a heading's size and
+   * weight at the mount id's 1,0,0 — a class at 0,1,0 would lose to it. It stays
+   * a heading because it names the section below it.
+   */
+  :global(#dyalog-video-library) .suggested {
+    padding: 0.625rem 0;
+    margin-bottom: 0.875rem;
+    border-bottom: 1px solid var(--dyalog-video-library-rule);
+
+    /* The text face, against the display face the heading reset gives it. This
+       line is a label that happens to be a heading, and it has to read as the
+       Browse line does. */
+    font-family: var(--dyalog-video-library-font-text);
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    color: var(--dyalog-video-library-muted);
   }
 
   hr {

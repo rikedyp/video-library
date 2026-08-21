@@ -54,20 +54,27 @@
 </article>
 
 <style>
+  /*
+   * minmax(0, …) rather than a bare fr on each track.
+   *
+   * `11fr` means `minmax(auto, 11fr)`, and an auto minimum will not go below the
+   * track's min-content width. A description carrying a long unbreakable URL
+   * gives the body column a large minimum, which it takes out of the thumbnail —
+   * so rows with a link in the description had visibly narrower thumbnails than
+   * rows without. A zero minimum makes the split geometry rather than content.
+   */
   .row {
     display: grid;
-    grid-template-columns: 11fr 20fr;
+    grid-template-columns: minmax(0, 11fr) minmax(0, 20fr);
     background: var(--dyalog-video-library-surface);
     border: 1px solid var(--dyalog-video-library-card-border);
     border-radius: var(--dyalog-video-library-radius);
-    transition:
-      box-shadow 120ms ease,
-      border-color 120ms ease;
+    box-shadow: var(--dyalog-video-library-card-shadow);
+    transition: var(--dyalog-video-library-card-transition);
   }
 
   .row:hover {
     box-shadow: var(--dyalog-video-library-card-hover-shadow);
-    border-color: var(--dyalog-video-library-card-hover-border);
   }
 
   /* The thumbnail link, as a direct child. */
@@ -91,16 +98,29 @@
     padding: 0.75rem 2rem;
   }
 
-  h2 {
-    font-size: 1.875rem;
+  /* Deliberately the same as the grid card's title: same step, same weight. A
+     row and a card are the same video in two layouts. */
+  :global(#dyalog-video-library) h2 {
+    min-height: calc(
+      var(--dyalog-video-library-title-lines) *
+        var(--dyalog-video-library-heading-line-height) * 1em
+    );
+    font-size: var(--dyalog-video-library-size-lg);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--dyalog-video-library-title-lines);
+    line-clamp: var(--dyalog-video-library-title-lines);
+    overflow: hidden;
+    overflow-wrap: anywhere;
   }
 
-  h2 :global(a) {
+  :global(#dyalog-video-library) h2 :global(a) {
     text-decoration: none;
     color: var(--dyalog-video-library-link);
   }
 
-  h2 :global(a:hover) {
+  :global(#dyalog-video-library) h2 :global(a:hover) {
     color: var(--dyalog-video-library-accent);
   }
 
@@ -112,25 +132,38 @@
     overflow: hidden;
     margin: 0.75rem 0;
     white-space: pre-wrap;
+
+    /* Descriptions carry raw URLs. Without this they are one unbreakable word,
+       which either overflows the column or gets clipped mid-link. */
+    overflow-wrap: anywhere;
     color: var(--dyalog-video-library-muted);
   }
 
   .presenters {
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    line-height: var(--dyalog-video-library-meta-line-height);
   }
 
+  /* .meta carries 0.5rem of its own below, so the bottom is trimmed to keep the
+     rule sitting evenly between the credits and the date. */
   hr {
+    margin: 0.75rem 0 0.25rem;
     border: 0;
     border-top: 1px solid var(--dyalog-video-library-rule);
   }
 
+  /* The date and the "in" before the event, treated as the labels elsewhere are.
+     The event itself is a link and the theme colours those with !important, so
+     it keeps its own colour. */
   .meta {
+    color: var(--dyalog-video-library-muted);
     display: flex;
     justify-content: space-between;
     margin: 0.5rem 0;
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    line-height: var(--dyalog-video-library-meta-line-height);
   }
 
   @media (max-width: 640px) {
@@ -145,10 +178,6 @@
 
     .body {
       padding: 0.75rem 1.25rem;
-    }
-
-    h2 {
-      font-size: 1.5rem;
     }
   }
 </style>

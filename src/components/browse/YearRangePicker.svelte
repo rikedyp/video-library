@@ -106,20 +106,19 @@
     gap: 0.5rem;
   }
 
+  /*
+   * Inline, not stacked.
+   *
+   * The other two columns lost their second line of text when their labels went
+   * to the screen reader, and From and To cannot: they say which select is which.
+   * Beside their selects instead of above them, all three columns are a heading
+   * and one row of controls, and the controls line up across the panel.
+   */
   .field {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.8125rem;
-  }
-
-  select {
-    height: var(--dyalog-video-library-control-height);
-    padding: 0 0.5rem;
-    border: 1px solid var(--dyalog-video-library-chip-border);
-    border-radius: var(--dyalog-video-library-radius);
-    background: var(--dyalog-video-library-surface);
-    color: var(--dyalog-video-library-text);
+    align-items: center;
+    gap: 0.375rem;
+    font-size: var(--dyalog-video-library-size-sm);
   }
 
   /* The mount id, since the kit styles `button:hover` and `:focus`, which
@@ -131,7 +130,7 @@
     border-radius: var(--dyalog-video-library-radius);
     background: var(--dyalog-video-library-surface);
     color: var(--dyalog-video-library-primary);
-    font-size: 0.8125rem;
+    font-size: var(--dyalog-video-library-size-sm);
     cursor: pointer;
   }
 

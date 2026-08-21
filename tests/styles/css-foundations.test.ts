@@ -53,28 +53,48 @@ function mediaBlock(source: string, query: string): string {
 describe("design tokens", () => {
   it.each([
     ["page-bg", "#fbfaf9"],
-    ["rule", "#e3e3e3"],
+    ["rule", "#e6e6e6"],
     ["divider-light", "#ecebe8"],
     ["chip", "#f1f0ee"],
     ["chip-border", "#e0dedb"],
     ["muted", "#6d7680"],
-    ["card-border", "#dcdad6"],
-    ["card-hover-border", "#c9b8ab"],
-    ["card-hover-shadow", "0 2px 8px rgba\\(6, 26, 41, 0\\.12\\)"],
+    ["card-border", "#e6e6e6"],
+    ["card-shadow", "0 0 25px rgba\\(0, 0, 0, 0\\.05\\)"],
+    ["card-hover-shadow", "0 0 30px rgba\\(0, 0, 0, 0\\.18\\)"],
+    ["panel-shadow", "0 2px 8px rgba\\(6, 26, 41, 0\\.12\\)"],
+    ["card-transition", "box-shadow 300ms ease"],
     ["skeleton", "#ecebe8"],
-    ["scrim-strong", "rgba\\(6, 26, 41, 0\\.96\\)"],
     ["scrim-mid", "rgba\\(6, 26, 41, 0\\.72\\)"],
-    ["scrim-soft", "rgba\\(6, 26, 41, 0\\.42\\)"],
-    ["eyebrow", "#ffa877"],
-    ["on-scrim", "#cfe0ec"],
     ["on-scrim-strong", "#ffffff"],
     ["thumb-bg", "#111111"],
     ["surface", "#ffffff"],
     ["on-primary", "#ffffff"],
-    ["radius", "3px"],
+    ["band", "#003b5c"],
+    ["tab-hover", "#ffb88f"],
+    ["radius", "5px"],
     ["control-height", "32px"],
     ["grid-columns", "3"],
     ["grid-gap", "20px"],
+    ["strip-gap", "1\\.375rem"],
+    // Named, not bound to the kit: inheriting it from the body is what let the
+    // whole library change typeface without anything in the app changing.
+    ["font-display", '"Klavika", sans-serif'],
+    ["font-text", '"IBM Plex Sans", sans-serif'],
+    ["size-xs", "0\\.75rem"],
+    ["size-sm", "0\\.9375rem"],
+    ["size-base", "1rem"],
+    ["size-md", "1\\.125rem"],
+    ["size-lg", "1\\.4rem"],
+    ["size-xl", "1\\.5rem"],
+    ["size-2xl", "1\\.875rem"],
+    // Klavika has 300/400/500/700 and no 600, so a 600 silently renders as Bold.
+    ["weight-regular", "400"],
+    ["weight-medium", "500"],
+    ["weight-bold", "700"],
+    ["heading-line-height", "1\\.3"],
+    ["heading-tracking", "-0\\.2px"],
+    ["title-lines", "2"],
+    ["meta-line-height", "1\\.8"],
   ])("--dyalog-video-library-%s is %s", (token, value) => {
     expect(app).toMatch(
       new RegExp(`--dyalog-video-library-${token}\\s*:\\s*${value}\\s*;`, "i"),
@@ -143,19 +163,6 @@ describe("the two breakpoints", () => {
   });
 });
 
-describe("the scrim over a thumbnail", () => {
-  it("covers the whole thumbnail rather than its bottom edge", () => {
-    // Many thumbnails are slides with burned-in titles, so this is legibility,
-    // not decoration.
-    const strip = styles("components/browse/FeaturedStrip.svelte");
-    const scrim = strip.slice(strip.indexOf(".scrim"));
-
-    expect(scrim).toMatch(/inset:\s*0/);
-    expect(scrim).toMatch(/linear-gradient\( to top/);
-    expect(scrim).toContain("var(--dyalog-video-library-scrim-strong)");
-  });
-});
-
 describe("the skeleton fade", () => {
   it("is an opaque overlay, not a mask", () => {
     // As a mask only alpha counts, which makes the colour stops inert and runs
@@ -196,10 +203,193 @@ describe("buttons against the kit", () => {
     ["components/browse/PresenterPicker.svelte", ".chip"],
     ["components/results/InfiniteListFooter.svelte", ".load-more"],
     ["components/chrome/SearchBar.svelte", "button"],
-    ["components/chrome/TermsFooter.svelte", ".toggle"],
   ])("%s raises %s to the mount id", (file, selector) => {
     expect(styles(file)).toContain(
       `:global(#dyalog-video-library) ${selector}`,
+    );
+  });
+});
+
+describe("headings against the kit", () => {
+  // `.elementor-kit-6 h3` styles colour, size, weight, line-height and letter
+  // spacing at 0,1,1, which ties with a component's scoped `h3` and wins on
+  // source order, because WordPress enqueues the kit after us. app.css reverts
+  // the kit at the id's 1,0,0, so a component's own heading rule has to sit
+  // above that to be seen at all. Dropping the id looks like tidying and hands
+  // every heading in the app back to whatever the kit says today.
+  it.each([
+    ["components/results/VideoCard.svelte", "h3"],
+    ["components/results/VideoRow.svelte", "h2"],
+    ["components/browse/Events.svelte", "h3"],
+    ["components/results/PresenterRow.svelte", "h3"],
+    ["components/browse/AdvancedOptions.svelte", "h3"],
+    ["routes/Watch.svelte", "h1"],
+    // A heading styled through a class rather than its tag needs the id just
+    // as much: `.heading` is 0,1,0 and the revert above is 1,0,0, so without it
+    // the wordmark renders at the browser's h1 size. SearchBar's is a
+    // `<svelte:element>`, which is why it does not read as a heading in the
+    // markup.
+    ["components/chrome/SearchBar.svelte", ".heading"],
+    ["components/browse/Events.svelte", ".type"],
+    ["components/browse/FeaturedStrip.svelte", ".hero-card h3"],
+    ["components/browse/FeaturedStrip.svelte", ".event h3"],
+    ["components/browse/Presenters.svelte", ".letter"],
+    ["routes/Watch.svelte", ".suggested"],
+  ])("%s raises %s to the mount id", (file, selector) => {
+    expect(styles(file)).toContain(
+      `:global(#dyalog-video-library) ${selector}`,
+    );
+  });
+
+  it("reverts the kit's heading typography in the sheet", () => {
+    // Two blocks now match that selector — the display face, and this one.
+    const block =
+      /:where\(h1, h2, h3, h4, h5, h6\) \{([^}]*font-size: revert[^}]*)\}/.exec(
+        app,
+      );
+
+    expect(block).not.toBeNull();
+    for (const property of ["font-size", "font-weight", "word-spacing"]) {
+      expect(block?.[1]).toContain(`${property}: revert`);
+    }
+
+    // These two the app has an opinion about, so they are set rather than
+    // reverted. Every heading gets them; a component restates them to disagree.
+    expect(block?.[1]).toContain(
+      "line-height: var(--dyalog-video-library-heading-line-height)",
+    );
+    expect(block?.[1]).toContain(
+      "letter-spacing: var(--dyalog-video-library-heading-tracking)",
+    );
+  });
+});
+
+describe("type comes from the scale", () => {
+  // Sixteen ad-hoc sizes had accumulated one component at a time, two of them
+  // in `em` so they resized with their container. A literal here is a step
+  // outside the scale, and a font-weight literal is how five rules came to ask
+  // for a 600 that Klavika does not have.
+  it.each(components)("%s sizes type from tokens", (file) => {
+    const declarations =
+      styles(file).match(/font-(?:size|weight)\s*:\s*[^;]+;/g) ?? [];
+
+    for (const declaration of declarations) {
+      expect(declaration).toMatch(/:\s*var\(--dyalog-video-library-/);
+    }
+  });
+});
+
+describe("the row's two columns", () => {
+  // A bare `11fr` is `minmax(auto, 11fr)`, which will not shrink past the
+  // track's min-content. One long URL in a description was enough to take width
+  // off the thumbnail, so rows did not agree with each other.
+  it("gives both tracks a zero minimum", () => {
+    expect(styles("components/results/VideoRow.svelte")).toContain(
+      "grid-template-columns: minmax(0, 11fr) minmax(0, 20fr)",
+    );
+  });
+});
+
+describe("selects draw their own chevron", () => {
+  // The browser pins its own to the border edge and padding-right does not move
+  // it, so a select strips it and paints the token instead. Dropping
+  // `appearance: none` brings the native one back alongside ours.
+  it("strips the native chevron and paints the token, once", () => {
+    const block = /#dyalog-video-library select \{([^}]*)\}/.exec(app);
+
+    expect(block?.[1]).toContain("appearance: none");
+    expect(block?.[1]).toContain("var(--dyalog-video-library-chevron)");
+  });
+
+  // Four selects across three components had a copy of that block each, and the
+  // chevron had to be replaced in all three when it changed.
+  it.each([
+    "components/browse/YearRangePicker.svelte",
+    "components/browse/AdvancedOptions.svelte",
+    "components/browse/ListControls.svelte",
+  ])("%s keeps no copy of its own", (file) => {
+    expect(styles(file)).not.toContain("var(--dyalog-video-library-chevron)");
+  });
+});
+
+describe("the tab strip's own spacing", () => {
+  // app.css zeroes list padding inside the mount at 1,0,0, so the strip's gap
+  // above itself has to be stated at the id or it silently does nothing.
+  it("sets its top padding at the mount id", () => {
+    expect(styles("components/browse/Tabs.svelte")).toMatch(
+      /:global\(#dyalog-video-library\) ul \{\s*padding-top:/,
+    );
+  });
+});
+
+describe("the route outlet takes no ring", () => {
+  // It is focused programmatically after every SPA navigation so a screen reader
+  // lands on the new content. A ring there outlines the entire page, and the
+  // rule saying so has to outrank the global :focus-visible at 1,0,0.
+  it("silences the outlet's outline at the mount id", () => {
+    expect(styles("App.svelte")).toContain(
+      ":global(#dyalog-video-library) .outlet:focus-visible",
+    );
+  });
+});
+
+describe("titles are clamped", () => {
+  // An unclamped title made its own card taller than every other card in the
+  // row, and in the strip it ate into the hero's thumbnail.
+  it.each([
+    "components/results/VideoCard.svelte",
+    "components/results/VideoRow.svelte",
+    "components/browse/FeaturedStrip.svelte",
+  ])("%s clamps to the shared line count", (file) => {
+    expect(styles(file)).toContain(
+      "line-clamp: var(--dyalog-video-library-title-lines)",
+    );
+  });
+});
+
+describe("one label treatment", () => {
+  // Three components render this line. It lived in each of them until one of the
+  // copies came back uppercased and tracked out, so the type and colour are
+  // settled in the sheet and only the spacing is a component's business.
+  it("settles the label's type and colour in the sheet", () => {
+    const block = /\.video-library-label \{([^}]*)\}/.exec(app);
+
+    expect(block?.[1]).toContain("var(--dyalog-video-library-size-sm)");
+    expect(block?.[1]).toContain("var(--dyalog-video-library-weight-regular)");
+    expect(block?.[1]).toContain("var(--dyalog-video-library-muted)");
+  });
+});
+
+describe("rules span their container", () => {
+  // The browser's default hr margin is `0.5em auto`, and an auto cross-axis
+  // margin cancels flex stretch — so an <hr> in a column flex container has no
+  // width at all. Two of the app's four separators sit in one.
+  it("forces the inline margins off every rule", () => {
+    expect(app).toMatch(/:where\(hr\) \{\s*margin-inline: 0;/);
+  });
+});
+
+describe("the two faces", () => {
+  // Klavika announces, IBM Plex Sans is read. A component may name either of
+  // those two — a heading that has to read as a label needs to say so, since the
+  // reset hands every heading the display face — but naming anything else is a
+  // third face by accident.
+  it.each(components)("%s names no typeface of its own", (file) => {
+    const declarations = styles(file).match(/font-family\s*:\s*[^;]+;/g) ?? [];
+
+    for (const declaration of declarations) {
+      expect(declaration).toMatch(
+        /var\(--dyalog-video-library-font-(?:display|text)\)|inherit/,
+      );
+    }
+  });
+
+  it("pairs the faces in the sheet and nowhere else", () => {
+    expect(app).toMatch(
+      /#dyalog-video-library \{[^}]*font-family: var\(--dyalog-video-library-font-text\)/,
+    );
+    expect(app).toMatch(
+      /:where\(h1, h2, h3, h4, h5, h6\) \{\s*font-family: var\(--dyalog-video-library-font-display\)/,
     );
   });
 });

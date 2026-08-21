@@ -105,8 +105,13 @@
   };
 </script>
 
-<div class="picker" {@attach open && dismiss}>
-  <label for="video-library-presenter">Presenter</label>
+<div
+  class={["picker", selected.length !== 0 && "chosen-any"]}
+  {@attach open && dismiss}
+>
+  <!-- Hidden for the same reason as the event select's: "Filter by Presenter"
+       sits directly above it, and a control still needs a label of its own. -->
+  <label class="sr-only" for="video-library-presenter">Presenter</label>
 
   <!-- Focus stays on the input and aria-activedescendant names the highlighted
        option, so the options are not themselves focus stops. -->
@@ -152,24 +157,29 @@
     {/each}
   </div>
 
-  {#if selected.length !== 0}
-    <ul class="chosen">
-      {#each selected as presenter (presenter.id)}
-        <li>
-          <!-- The whole token removes the filter, rather than a glyph inside it
-               too small to be the 44px target the token already is. -->
-          <button
-            type="button"
-            class="chip"
-            aria-label={removeLabel(presenter.name)}
-            onclick={() => remove(presenter.id)}
-          >
-            {presenter.name}<span aria-hidden="true">×</span>
-          </button>
-        </li>
-      {/each}
-    </ul>
-  {/if}
+  <!-- The row is always here, even with nothing in it. Rendering it only when a
+       presenter is chosen made the whole tab strip below jump down the moment
+       someone picked one, and back up when they cleared it. -->
+  <div class="chosen-slot">
+    {#if selected.length !== 0}
+      <ul class="chosen">
+        {#each selected as presenter (presenter.id)}
+          <li>
+            <!-- The whole token removes the filter, rather than a glyph inside
+                 it too small to be the 44px target the token already is. -->
+            <button
+              type="button"
+              class="chip"
+              aria-label={removeLabel(presenter.name)}
+              onclick={() => remove(presenter.id)}
+            >
+              {presenter.name}<span aria-hidden="true">×</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -178,7 +188,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    font-size: 0.8125rem;
+    font-size: var(--dyalog-video-library-size-sm);
   }
 
   input {
@@ -190,9 +200,19 @@
     color: var(--dyalog-video-library-text);
   }
 
+  /*
+   * Under the input, or under the chips.
+   *
+   * `top: 100%` measures the whole picker, and the picker now always includes the
+   * reserved chip row — so on its own it left the list hanging a row below the
+   * input with nothing chosen. The input's own height is right for that case, and
+   * wrong once a chip is there, where the list would cover the thing it just
+   * added. So: the input's height until something is chosen, the picker's full
+   * height after. The reserved row means neither state moves anything below.
+   */
   [role="listbox"] {
     position: absolute;
-    top: 100%;
+    top: var(--dyalog-video-library-control-height);
     left: 0;
     z-index: 10;
     min-width: 220px;
@@ -202,7 +222,7 @@
     background: var(--dyalog-video-library-surface);
     border: 1px solid var(--dyalog-video-library-card-border);
     border-radius: var(--dyalog-video-library-radius);
-    box-shadow: var(--dyalog-video-library-card-hover-shadow);
+    box-shadow: var(--dyalog-video-library-panel-shadow);
     color: var(--dyalog-video-library-text);
   }
 
@@ -218,13 +238,32 @@
     background: none;
     color: inherit;
     text-align: left;
-    font-size: 0.8125rem;
+    font-size: var(--dyalog-video-library-size-sm);
     cursor: pointer;
   }
 
   :global(#dyalog-video-library) [role="option"][aria-selected="true"],
   :global(#dyalog-video-library) [role="option"]:hover {
     background: var(--dyalog-video-library-divider-light);
+  }
+
+  /*
+   * Reserved, not conditional.
+   *
+   * One control's height, which comfortably holds one chip, so the band's height
+   * does not depend on whether a presenter is chosen. More than one row of chips
+   * still grows it — that is a deliberate limit rather than an oversight, since
+   * reserving for every possible row would leave a permanent hole.
+   */
+  .chosen-any [role="listbox"] {
+    top: 100%;
+  }
+
+  .chosen-slot {
+    /* One chip exactly, rather than one control's height: a chip is a little
+       shorter than a select, and the difference was dead space under the input
+       whether or not anyone had chosen a presenter. */
+    min-height: calc(var(--dyalog-video-library-size-sm) * 1.5 + 0.25rem + 2px);
   }
 
   .chosen {
@@ -247,7 +286,7 @@
     border-radius: var(--dyalog-video-library-radius);
     background: var(--dyalog-video-library-chip);
     color: var(--dyalog-video-library-text);
-    font-size: 0.8125rem;
+    font-size: var(--dyalog-video-library-size-sm);
     cursor: pointer;
   }
 

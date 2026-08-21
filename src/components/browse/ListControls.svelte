@@ -148,18 +148,23 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-weight: 700;
   }
 
-  select {
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--dyalog-video-library-chip-border);
-    border-radius: var(--dyalog-video-library-radius);
-    background: var(--dyalog-video-library-surface);
-    color: inherit;
+  /* Reads as the Browse line does: a label, not data. The weight sits here
+     rather than on .sort because the select inherits colour from it. */
+  .sort label {
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    color: var(--dyalog-video-library-muted);
   }
 
   @media (max-width: 640px) {
+    /* One arrangement on a narrow screen, so there is nothing to choose. The
+       layout state forces the grid to match; see layout.svelte.ts. */
+    .toggle {
+      display: none;
+    }
+
     .icon,
     select {
       min-height: 44px;

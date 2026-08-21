@@ -20,6 +20,9 @@
     { label: "Videos", href: "/", covers: ["/", "/search/"] },
     { label: "Events", href: "/events/", covers: ["/events/"] },
     { label: "Presenters", href: "/presenters/", covers: ["/presenters/"] },
+    // Not a way of browsing the library, but it has to be reachable from every
+    // page, and a link at the foot of a page this long was not.
+    { label: "Terms of Use", href: "/terms/", covers: ["/terms/"] },
   ];
 </script>
 
@@ -46,27 +49,53 @@
   .band {
     display: flex;
     justify-content: center;
-    background-color: var(--dyalog-video-library-primary-dark);
+    background-color: var(--dyalog-video-library-band);
   }
 
   ul {
     display: flex;
     list-style: none;
     margin: 0;
-    padding-top: 0.5rem;
     gap: 0.5rem;
   }
 
-  /* The tab is Link's anchor, so the selector has to reach into another
-     component's markup. */
+  /*
+   * The mount id, because app.css zeroes padding on every ol and ul inside the
+   * mount at 1,0,0 — a scoped `ul` rule is 0,1,1 and loses to it. The padding
+   * here had no effect at all, at either value, and the only gap above the tabs
+   * was the search row's own bottom padding.
+   *
+   * This is the whole gap between the tabs and whatever sits above them: the
+   * search row, or the filter panel when it is open.
+   */
+  :global(#dyalog-video-library) ul {
+    padding-top: 1rem;
+  }
+
+  /*
+   * The tab is Link's anchor, so the selector has to reach into another
+   * component's markup.
+   *
+   * Sized and weighted as .video-library-label is, but not using that class: it
+   * carries the muted label colour, and a tab needs to hold its own against the
+   * band behind it — white while inactive, the text colour once it is the page.
+   */
   ul :global(a) {
     display: inline-block;
     padding: 0.5rem 1rem;
     border-radius: var(--dyalog-video-library-radius)
       var(--dyalog-video-library-radius) 0 0;
-    background-color: var(--dyalog-video-library-primary-dark);
+    background-color: var(--dyalog-video-library-band);
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
     color: var(--dyalog-video-library-on-primary);
     text-decoration: none;
+  }
+
+  /* Not the current tab: it sits on the page background, where the light orange
+     would all but disappear. */
+  ul :global(a:not([aria-current="page"]):hover) {
+    color: var(--dyalog-video-library-tab-hover);
   }
 
   ul :global(a[aria-current="page"]) {

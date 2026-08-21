@@ -96,10 +96,35 @@ describe("VideoCard", () => {
     expect(link.getAttribute("href")).toContain("presenter_id=999");
   });
 
-  it("joins a pair of presenters with an ampersand", () => {
+  it("says nothing above the title unless asked", () => {
     const { container } = render(VideoCard, { props: { video } });
 
-    expect(container.textContent).toContain("John Smith & Jane Doe");
+    expect(container.querySelector(".video-library-label")).toBeNull();
+  });
+
+  it("sizes itself unless asked to fill", () => {
+    const { container } = render(VideoCard, { props: { video } });
+
+    expect(container.querySelector(".card")).not.toHaveClass("fill");
+  });
+
+  it("fills its container when the featured strip asks it to", () => {
+    const { container } = render(VideoCard, { props: { video, fill: true } });
+
+    expect(container.querySelector(".card")).toHaveClass("fill");
+  });
+
+  it("labels the card when the featured strip asks it to", () => {
+    render(VideoCard, { props: { video, label: "Featured Video" } });
+
+    expect(screen.getByText("Featured Video")).toBeInTheDocument();
+  });
+
+  it("joins a pair of presenters with a comma, as it does three", () => {
+    const { container } = render(VideoCard, { props: { video } });
+
+    expect(container.textContent).toContain("John Smith, Jane Doe");
+    expect(container.textContent).not.toContain("&");
   });
 
   it("joins three presenters with commas", () => {

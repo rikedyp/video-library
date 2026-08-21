@@ -76,10 +76,14 @@
     flex-direction: column;
   }
 
-  .type {
+  /* A label, like the Browse line and the featured captions: the text face, the
+     same step and weight, the same muted colour. The heading reset hands every
+     heading the display face, so this has to say otherwise. */
+  :global(#dyalog-video-library) .type {
     padding-top: 1rem;
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-family: var(--dyalog-video-library-font-text);
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
     color: var(--dyalog-video-library-muted);
   }
 
@@ -92,25 +96,33 @@
     border-bottom: 1px solid var(--dyalog-video-library-rule);
   }
 
-  h3 {
-    font-size: 1.5rem;
+  /* Titled as a video card is titled: same step, same weight, and Klavika from
+     the heading reset. An event in this list and a video in the grid are the same
+     kind of thing to click. */
+  :global(#dyalog-video-library) h3 {
+    font-size: var(--dyalog-video-library-size-lg);
+    font-weight: var(--dyalog-video-library-weight-regular);
   }
 
-  h3 :global(a) {
+  :global(#dyalog-video-library) h3 :global(a) {
     text-decoration: none;
     color: var(--dyalog-video-library-link);
   }
 
-  h3 :global(a:hover) {
+  :global(#dyalog-video-library) h3 :global(a:hover) {
     color: var(--dyalog-video-library-accent);
   }
 
+  /* The label treatment too: it was already the right step and weight, and the
+     colour is what it was missing. */
   .meta {
     display: flex;
     gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    color: var(--dyalog-video-library-muted);
     white-space: nowrap;
+    line-height: var(--dyalog-video-library-meta-line-height);
   }
 
   /* Separates the facts without a character in the markup. */
@@ -119,10 +131,6 @@
   }
 
   @media (max-width: 640px) {
-    h3 {
-      font-size: 1.25rem;
-    }
-
     .row {
       flex-direction: column;
       gap: 0.125rem;

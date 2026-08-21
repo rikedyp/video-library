@@ -3,11 +3,20 @@
   // links and four tab stops. What is featured comes from config.js, so the
   // strip resolves its own slots and there is nothing here for a page to wire.
   import type { Video } from "../../lib/api/types";
+  import { listEvents } from "../../lib/api/events";
   import { getVideo, listVideos } from "../../lib/api/videos";
   import { featuredConfig, type FeaturedConfig } from "../../lib/config";
   import Link from "../../lib/router/Link.svelte";
   import { DEFAULT_FILTERS } from "../../lib/utils/browseFilters";
-  import { presenterLabels, separator } from "../results/presenters";
+  import { isOwnEvent } from "../../lib/utils/ownEvents";
+  import VideoCard from "../results/VideoCard.svelte";
+  import { formatDate } from "../../lib/utils/formatDate";
+  import {
+    eventHref,
+    presenterHref,
+    presenterLabels,
+    separator,
+  } from "../results/presenters";
 
   interface Props {
     /** What config.js said, and null to fall back to the newest videos. */
@@ -29,24 +38,65 @@
     event: FeaturedEvent | null;
   }
 
-  /** Hero plus two secondaries, when nothing is configured. */
-  const FALLBACK_SLOTS = 3;
+  /** Hero plus the one companion card, when nothing is configured. */
+  const FALLBACK_SLOTS = 2;
+
+  /**
+   * How far down the newest videos to look for one.
+   *
+   * Only a handful of talks are newer than the last user meeting — eight at the
+   * time of writing — but conference and webinar content arrives between
+   * meetings, so the window is generous rather than tight. Nothing is rendered
+   * if it finds none, rather than falling back to an older event and calling it
+   * the last one.
+   */
+  const NEWEST_WINDOW = 100;
 
   /** A slot pointing at content that no longer exists renders nothing. */
   const slot = (id: string) => getVideo(id).catch(() => null);
 
-  async function loadEvent(slug: string): Promise<FeaturedEvent | null> {
+  /**
+   * The most recent of Dyalog's own meetings, worked out from the videos.
+   *
+   * The events API carries `start` and `end`, and both are empty on every live
+   * row, so an event has no date of its own to sort by. What it does have is
+   * videos, so the newest video belonging to one of our meetings names the
+   * meeting. listEvents is already in the five-minute response cache from the
+   * roster load, so this costs one request, not two.
+   */
+  async function loadLastEvent(): Promise<FeaturedEvent | null> {
+    const [events, newest] = await Promise.all([
+      listEvents().catch(() => []),
+      listVideos(
+        { ...DEFAULT_FILTERS, sort: "newest" },
+        { page: 1, perpage: NEWEST_WINDOW },
+      ).catch(() => null),
+    ]);
+
+    const ours = new Set(
+      events
+        .filter((event) => isOwnEvent(event.type))
+        .map((event) => event.shortname),
+    );
+
+    const video = newest?.items.find(
+      (item) => item.eventSlug !== "" && ours.has(item.eventSlug),
+    );
+    if (!video) return null;
+
     // One row, for the total: `total` counts the event, where dvl requested six
     // and rendered the number it got back, so an event of 40 read "6 videos".
     const page = await listVideos(
-      { ...DEFAULT_FILTERS, event: slug },
+      { ...DEFAULT_FILTERS, event: video.eventSlug },
       { page: 1, perpage: 1 },
     ).catch(() => null);
+    if (!page) return null;
 
-    const first = page?.items[0];
-    if (!first) return null;
-
-    return { slug, name: first.event || slug, total: page.total };
+    return {
+      slug: video.eventSlug,
+      name: video.event || video.eventSlug,
+      total: page.total,
+    };
   }
 
   async function loadFallback(): Promise<Slots> {
@@ -57,13 +107,18 @@
 
     const [hero, ...secondaries] = page?.items ?? [];
 
-    return { hero: hero ?? null, eyebrow: "", secondaries, event: null };
+    return {
+      hero: hero ?? null,
+      eyebrow: "",
+      secondaries,
+      event: await loadLastEvent(),
+    };
   }
 
   async function loadSlots(): Promise<Slots> {
     if (config === null) return loadFallback();
 
-    const { hero, heroEyebrow, secondaryIds, eventSlug } = config;
+    const { hero, heroEyebrow, secondaryIds } = config;
 
     // One request per configured slot, none for a slot that is not configured.
     // dvl issued a `perpage=1&pg=1` request for the slots it did not want, to
@@ -71,7 +126,7 @@
     const [resolvedHero, secondaries, event] = await Promise.all([
       slot(hero),
       Promise.all(secondaryIds.map(slot)),
-      eventSlug === null ? null : loadEvent(eventSlug),
+      loadLastEvent(),
     ]);
 
     return {
@@ -83,65 +138,82 @@
   }
 
   const slots = loadSlots();
-
-  function credits(video: Video): string {
-    const presenters = presenterLabels(video.presenterIds);
-    const names = presenters
-      .map(
-        (presenter, index) =>
-          presenter.label + separator(index, presenters.length),
-      )
-      .join("");
-
-    // Presenter · Event. The handoff asks for a duration too, and no field on
-    // the API carries one.
-    return video.event === "" ? names : `${names} · ${video.event}`;
-  }
 </script>
 
-{#snippet feature(video: Video, hero: boolean, eyebrow: string)}
-  <Link href={`/watch/?v=${video.youtubeId}`}>
-    <span class={["thumb", hero ? "hero" : "secondary"]}>
-      <img src={video.thumbnail} alt="" loading="lazy" decoding="async" />
-      <span class="scrim"></span>
-      <span class="caption">
-        {#if hero && eyebrow !== ""}
-          <span class="eyebrow">{eyebrow}</span>
-        {/if}
-        <span class="title">{video.title}</span>
-        {#if hero}
-          <span class="meta">{credits(video)}</span>
-        {/if}
+<!--
+  The hero, built as a video card is built: the thumbnail and title are one link,
+  and the credits and meta sit outside it because they carry links of their own.
+-->
+{#snippet heroCard(video: Video, eyebrow: string)}
+  {@const presenters = presenterLabels(video.presenterIds)}
+  <article class="hero-card">
+    <Link href={`/watch?v=${video.youtubeId}`}>
+      <span class="thumb">
+        <img src={video.thumbnail} alt="" loading="lazy" decoding="async" />
       </span>
-    </span>
-  </Link>
+      {#if eyebrow !== ""}
+        <span class="video-library-label hero-label">{eyebrow}</span>
+      {/if}
+      <h3 class="title">{video.title}</h3>
+    </Link>
+
+    {#if presenters.length > 0}
+      <p class="presenters">
+        {#each presenters as presenter, index (presenter.id)}
+          <Link href={presenterHref(presenter.id)}>{presenter.label}</Link
+          >{separator(index, presenters.length)}
+        {/each}
+      </p>
+    {/if}
+
+    <div class="meta">
+      <hr />
+      <p>
+        <span>{formatDate(video.presentedAt, "short")}</span>
+        {#if video.eventSlug}
+          <span>
+            in <Link href={eventHref(video.eventSlug)}
+              >{video.event || video.eventSlug}</Link
+            >
+          </span>
+        {/if}
+      </p>
+    </div>
+  </article>
 {/snippet}
 
 {#await slots then loaded}
   {#if loaded.hero}
-    <section class="strip">
-      <p class="label"><span>FEATURED</span></p>
-
+    <!-- Labelled rather than headed: the visible FEATURED caption is gone, and a
+         landmark with no name is worse than no landmark. -->
+    <section class="strip" aria-label="Featured">
       <div class="layout">
-        {@render feature(loaded.hero, true, loaded.eyebrow)}
+        {@render heroCard(loaded.hero, loaded.eyebrow)}
 
         <div class="column">
-          {#each loaded.secondaries as video (video.youtubeId)}
-            {@render feature(video, false, "")}
-          {/each}
+          <!-- The same component the grid renders, so the two cannot drift. -->
+          {#if loaded.secondaries[0]}
+            <VideoCard
+              video={loaded.secondaries[0]}
+              label={loaded.eyebrow}
+              fill
+            />
+          {/if}
 
           {#if loaded.event}
             <Link
               href={`/?pg=1&sort=newest&perpage+18&event=${encodeURIComponent(loaded.event.slug)}`}
             >
-              <span class="event">
-                <span class="eyebrow">FROM THIS EVENT</span>
-                <span class="event-name">{loaded.event.name}</span>
+              <div class="event">
+                <span class="video-library-label"
+                  >Videos from our latest event</span
+                >
+                <h3 class="event-name">{loaded.event.name}</h3>
                 <span class="event-count">
                   {loaded.event.total}
                   {loaded.event.total === 1 ? "video" : "videos"}
                 </span>
-              </span>
+              </div>
             </Link>
           {/if}
         </div>
@@ -151,64 +223,90 @@
 {/await}
 
 <style>
+  /* The top margin stands in for the FEATURED label that used to sit here and
+     hold the strip off the tabs above it. */
   .strip {
-    margin-bottom: 1.375rem;
-  }
-
-  .label {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--dyalog-video-library-muted);
-  }
-
-  /* The rule runs from the label to the end of the row. */
-  .label::after {
-    content: "";
-    flex: 1;
-    border-top: 1px solid var(--dyalog-video-library-rule);
+    margin-top: var(--dyalog-video-library-strip-gap);
+    margin-bottom: var(--dyalog-video-library-strip-gap);
   }
 
   .layout {
     display: grid;
     grid-template-columns: 1.55fr 1fr;
-    gap: 1.375rem;
+    gap: var(--dyalog-video-library-strip-gap);
   }
 
   .column {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--dyalog-video-library-strip-gap);
   }
 
-  .strip :global(a) {
+  /*
+   * Direct children only.
+   *
+   * These are the slot links — the event card — and
+   * they are card surfaces, so they fill their space and drop the underline. The
+   * hero's credit links are ordinary inline links inside a paragraph, exactly as
+   * they are on a video card, and a blanket rule here turned them into blocks:
+   * the event name wrapped to its own line and a presenter's hover underline ran
+   * the full width of the card.
+   */
+  .column > :global(a) {
     display: block;
     text-decoration: none;
   }
 
-  /* Pins the event card to the bottom of the column. */
-  .column :global(a:last-child) {
-    margin-top: auto;
+  /* The same surface, edge and lift as a video card, from the same tokens. */
+  .hero-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--dyalog-video-library-surface);
+    border: 1px solid var(--dyalog-video-library-card-border);
+    border-radius: var(--dyalog-video-library-radius);
+    box-shadow: var(--dyalog-video-library-card-shadow);
+    transition: var(--dyalog-video-library-card-transition);
+  }
+
+  .hero-card:hover {
+    box-shadow: var(--dyalog-video-library-card-hover-shadow);
+  }
+
+  /* The thumbnail-and-title link, as a direct child, for the same reason. */
+  .hero-card > :global(a) {
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    text-decoration: none;
   }
 
   .thumb {
-    position: relative;
     display: block;
     overflow: hidden;
     border-radius: var(--dyalog-video-library-radius);
     background: var(--dyalog-video-library-thumb-bg);
   }
 
-  .thumb.hero {
-    height: 330px;
-  }
-
-  .thumb.secondary {
-    height: 74px;
+  /*
+   * Takes the slack rather than leaving it under the date.
+   *
+   * The card is a grid item, so it stretches to whatever the column beside it
+   * needs — two cards and the gap between them. Its own content is shorter, and
+   * the difference used to pool at the bottom of the card as a band of empty
+   * white. Growing the thumbnail spends it instead, and object-fit means the
+   * image crops rather than distorts.
+   *
+   * The floor is low on purpose. Whichever side is intrinsically taller sets the
+   * row, and the other one is left with slack it has nowhere to put: at 330px
+   * the hero won that contest and the leftover appeared under the event card
+   * instead. Low enough that the column always governs, the thumbnail takes the
+   * difference and both columns end level.
+   */
+  .hero-card .thumb {
+    flex: 1;
+    min-height: 220px;
+    border-radius: var(--dyalog-video-library-radius)
+      var(--dyalog-video-library-radius) 0 0;
   }
 
   img {
@@ -217,57 +315,72 @@
     object-fit: cover;
   }
 
-  /* Full height, not a bottom fade: many thumbnails are slides with burned-in
-     titles that collide with the title laid over them. */
-  .scrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to top,
-      var(--dyalog-video-library-scrim-strong),
-      var(--dyalog-video-library-scrim-mid) 55%,
-      var(--dyalog-video-library-scrim-soft)
-    );
+  /* Type and colour come from .video-library-label in app.css; this is only
+     where it sits. */
+  .hero-label {
+    padding: 0.75rem 0.75rem 0;
   }
 
-  .caption {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    padding: 1rem;
-    color: var(--dyalog-video-library-on-scrim-strong);
+  /* Klavika, like every other title in the app, which a heading gets from the
+     reset in app.css. The id is what clears that reset's own 1,0,0. */
+  :global(#dyalog-video-library) .hero-card .hero-label + h3 {
+    padding-top: 0.25rem;
   }
 
-  .eyebrow {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--dyalog-video-library-eyebrow);
+  /*
+   * Clamped, but not reserved: the thumbnail above already takes up whatever the
+   * text leaves, so a one-line title costs nothing here.
+   *
+   * The measure is wider than the 30ch it was, so that two lines hold a hundred
+   * characters and the longest titles in the library survive the clamp.
+   */
+  :global(#dyalog-video-library) .hero-card h3 {
+    max-width: 45ch;
+    padding: 0.75rem 0.75rem 0.25rem;
+    font-size: var(--dyalog-video-library-size-2xl);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    color: var(--dyalog-video-library-link);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--dyalog-video-library-title-lines);
+    line-clamp: var(--dyalog-video-library-title-lines);
+    overflow: hidden;
+    overflow-wrap: anywhere;
   }
 
-  .hero .title {
-    max-width: 22ch;
-    font-size: 1.5625rem;
-    font-weight: 700;
-    line-height: 1.2;
+  :global(#dyalog-video-library) .hero-card:hover h3 {
+    color: var(--dyalog-video-library-accent);
   }
 
-  .secondary .title {
-    font-size: 0.84375rem;
-    font-weight: 600;
-    line-height: 1.25;
+  /* Credits and meta, sized and spaced as a video card's are. */
+  .presenters {
+    padding: 0 0 0 0.75rem;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    line-height: var(--dyalog-video-library-meta-line-height);
   }
 
   .meta {
-    font-size: 0.75rem;
-    color: var(--dyalog-video-library-on-scrim);
+    padding: 0.5rem 0.75rem;
   }
 
+  .meta p {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+    font-size: var(--dyalog-video-library-size-sm);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    line-height: var(--dyalog-video-library-meta-line-height);
+    color: var(--dyalog-video-library-muted);
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--dyalog-video-library-rule);
+  }
+
+  /* Lifts as a video card does: it is a card, and it sat flat beside two that
+     did not. */
   .event {
     display: flex;
     flex-direction: column;
@@ -275,22 +388,29 @@
     padding: 0.875rem 1rem;
     background: var(--dyalog-video-library-surface);
     border: 1px solid var(--dyalog-video-library-card-border);
-    border-left: 3px solid var(--dyalog-video-library-secondary);
     border-radius: var(--dyalog-video-library-radius);
+    box-shadow: var(--dyalog-video-library-card-shadow);
+    transition: var(--dyalog-video-library-card-transition);
   }
 
-  .event .eyebrow {
-    color: var(--dyalog-video-library-muted);
+  .event:hover {
+    box-shadow: var(--dyalog-video-library-card-hover-shadow);
   }
 
-  .event-name {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--dyalog-video-library-primary);
+  /* Titled as a video card is titled: Klavika from the heading reset, the same
+     step, weight and link colour, and the same shift to accent on hover. */
+  :global(#dyalog-video-library) .event h3 {
+    font-size: var(--dyalog-video-library-size-lg);
+    font-weight: var(--dyalog-video-library-weight-regular);
+    color: var(--dyalog-video-library-link);
+  }
+
+  :global(#dyalog-video-library) .event:hover h3 {
+    color: var(--dyalog-video-library-accent);
   }
 
   .event-count {
-    font-size: 0.75rem;
+    font-size: var(--dyalog-video-library-size-xs);
     color: var(--dyalog-video-library-muted);
   }
 
@@ -300,7 +420,9 @@
       grid-template-columns: 1fr;
     }
 
-    .thumb.hero {
+    /* One column here, so nothing is beside it to match: a height again. */
+    .hero-card .thumb {
+      flex: none;
       height: 220px;
     }
   }
