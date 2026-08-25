@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/svelte";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import FeaturedStrip from "../../src/components/browse/FeaturedStrip.svelte";
+import { eventHref } from "../../src/components/results/presenters";
 import type { FeaturedConfig } from "../../src/lib/config";
 import { apiVideos } from "../../src/lib/env";
 import { loadRosters, rosters } from "../../src/lib/state/rosters.svelte";
@@ -28,16 +29,25 @@ function recordRequests() {
 }
 
 /**
- * The slot links only. The hero is a video card now, so it also carries a link
- * per presenter and one to its event, and those are not slots.
+ * The video slots. The hero is a video card now, so it also carries a link per
+ * presenter and one to its event, and those are not slots.
  */
-function slotLinks() {
+function watchLinks() {
   return screen
     .getAllByRole("link")
     .map((a) => a.getAttribute("href"))
-    .filter(
-      (href) => href?.startsWith("/watch?v=") || href?.startsWith("/?event="),
-    );
+    .filter((href) => href?.startsWith("/watch/?v="));
+}
+
+/**
+ * The event card, found by its label: its href is the one every other event
+ * link uses, so the hero's own event credit carries the same one.
+ */
+function eventSlot() {
+  return screen
+    .getByText("Videos from our latest event")
+    .closest("a")
+    ?.getAttribute("href");
 }
 
 async function heroTitle(title: string) {
@@ -85,11 +95,8 @@ describe("FeaturedStrip", () => {
     expect(screen.getAllByText("Editor's pick")).toHaveLength(2);
     // dyalog-22 is not configured: it is the newest video's own meeting in the
     // mock library, which is how the card finds the last event.
-    expect(slotLinks()).toEqual([
-      "/watch/?v=vid001",
-      "/watch/?v=vid002",
-      "/search/?event=dyalog-22",
-    ]);
+    expect(watchLinks()).toEqual(["/watch/?v=vid001", "/watch/?v=vid002"]);
+    expect(eventSlot()).toBe(eventHref("dyalog-22"));
   });
 
   it("counts the event, rather than the rows it asked for", async () => {
@@ -111,7 +118,8 @@ describe("FeaturedStrip", () => {
     await heroTitle("Introduction to APL");
 
     // The hero and the event card, with nothing where the companion would be.
-    expect(slotLinks()).toEqual(["/watch?v=vid001", "/?event=dyalog-22"]);
+    expect(watchLinks()).toEqual(["/watch/?v=vid001"]);
+    expect(eventSlot()).toBe(eventHref("dyalog-22"));
   });
 
   it("renders nothing at all when the hero is gone", async () => {
@@ -164,8 +172,9 @@ describe("FeaturedStrip", () => {
     expect(listed[0].searchParams.get("per_page")).toBe("2");
     expect(listed[0].searchParams.get("sort")).toBe("newest");
 
-    // Hero, companion, and the event card.
-    expect(slotLinks()).toHaveLength(3);
+    // Hero and companion, both from that one request, and the event card.
+    expect(watchLinks()).toHaveLength(2);
+    expect(eventSlot()).toBe(eventHref("dyalog-22"));
   });
 
   it("renders nothing with nothing configured and nothing returned", async () => {

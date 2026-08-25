@@ -201,9 +201,7 @@
           {/if}
 
           {#if loaded.event}
-            <Link
-              href={`/?pg=1&sort=newest&perpage+18&event=${encodeURIComponent(loaded.event.slug)}`}
-            >
+            <Link href={eventHref(loaded.event.slug)}>
               <div class="event">
                 <span class="video-library-label"
                   >Videos from our latest event</span
