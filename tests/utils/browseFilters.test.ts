@@ -155,8 +155,7 @@ describe("parseFilters", () => {
 
 describe("serialiseFilters", () => {
   it("always emits pg, sort and perpage", () => {
-    // performSearch has always written these three unconditionally; browse
-    // URLs are consistent with search URLs as a result.
+    // So a browse URL and a search URL carry the same params.
     const params = serialiseFilters(DEFAULT_FILTERS);
     expect(params.get("pg")).toBe("1");
     expect(params.get("sort")).toBe("newest");

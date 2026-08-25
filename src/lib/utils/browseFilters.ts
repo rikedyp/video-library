@@ -177,9 +177,12 @@ export function advancedSignature(filters: BrowseFilters): string {
  * Unspecified fields fall back to the defaults.
  *
  * `pg`, `sort` and `perpage` are always emitted and the rest only when they
- * carry a value — which is exactly what dvl's performSearch has always
- * written, so /search URLs are unchanged. Param order matches too, to keep
- * URL churn to a minimum.
+ * carry a value, so every URL the app writes has the same shape. `sort` being
+ * unconditional is why `setFilters` cannot read a chosen sort off the URL and
+ * compares against the query's default instead.
+ *
+ * Param order is fixed: the list engine's identity is this string, so a
+ * reordering would refetch the list.
  */
 export function serialiseFilters(
   filters: Partial<BrowseFilters>,
