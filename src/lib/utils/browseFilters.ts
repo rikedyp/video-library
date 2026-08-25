@@ -62,16 +62,18 @@ export function defaultSortFor(q: string): string {
  * filter change in place.
  *
  * The advanced-search panel's auto-rerun writes to the route the user is on
- * when it appears here, and falls back to /search when it does not — changing
+ * when it appears here, and falls back to /search/ when it does not: changing
  * a filter has to lead somewhere that shows the result.
  *
  * /events and /presenters list entities rather than videos and link into
  * /search, so they stay off this list deliberately.
+ *
+ * Entries carry the trailing slash that `location.pathname` always has.
  */
-export const RESULT_ROUTES = ["/search", "/"];
+export const RESULT_ROUTES = ["/search/", "/"];
 
 export function rerunPathFor(pathname: string): string {
-  return RESULT_ROUTES.indexOf(pathname) === -1 ? "/search" : pathname;
+  return RESULT_ROUTES.indexOf(pathname) === -1 ? "/search/" : pathname;
 }
 
 export const DEFAULT_FILTERS: BrowseFilters = {

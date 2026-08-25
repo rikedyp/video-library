@@ -40,7 +40,7 @@ describe("the browse strip", () => {
     );
     expect(screen.getByRole("link", { name: "Terms of Use" })).toHaveAttribute(
       "href",
-      "/terms",
+      "/terms/",
     );
   });
 

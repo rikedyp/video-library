@@ -4,6 +4,7 @@ import {
   hasAdvancedFilters,
   isSearch,
   parseFilters,
+  rerunPathFor,
   serialiseFilters,
   DEFAULT_FILTERS,
   MAX_PAGE,
@@ -305,6 +306,22 @@ describe("isSearch", () => {
     "is false for %o, which only arranges",
     (field) => {
       expect(isSearch({ ...DEFAULT_FILTERS, ...field })).toBe(false);
+    },
+  );
+});
+
+// The panel's rerun compares against location.pathname, which always carries a
+// trailing slash.
+describe("rerunPathFor", () => {
+  it("stays on a route that lists videos", () => {
+    expect(rerunPathFor("/search/")).toBe("/search/");
+    expect(rerunPathFor("/")).toBe("/");
+  });
+
+  it.each(["/events/", "/presenters/", "/watch/", "/terms/"])(
+    "sends %s to search, where the result can be shown",
+    (pathname) => {
+      expect(rerunPathFor(pathname)).toBe("/search/");
     },
   );
 });
