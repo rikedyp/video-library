@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import App from "../../src/App.svelte";
 import SearchBar from "../../src/components/chrome/SearchBar.svelte";
 import { location } from "../../src/lib/router/location.svelte";
+import { loadRosters, rosters } from "../../src/lib/state/rosters.svelte";
 import { searchPanel } from "../../src/lib/state/searchPanel.svelte";
 import { server } from "../mocks/server";
 
@@ -28,6 +29,24 @@ describe("SearchBar", () => {
 
     expect(location.pathname).toBe("/search/");
     expect(new URLSearchParams(location.search).get("q")).toBe("apl");
+  });
+
+  it("keeps every other filter, so the panel's own are not lost", async () => {
+    setUrl("/search/?event=dyalog-22&presenter_id=1&perpage=40&sort=oldest");
+    const { container } = render(SearchBar);
+
+    await fireEvent.input(screen.getByRole("searchbox"), {
+      target: { value: "apl" },
+    });
+    await fireEvent.submit(container.querySelector("form")!);
+
+    const params = new URLSearchParams(location.search);
+    expect(params.get("event")).toBe("dyalog-22");
+    expect(params.get("presenter_id")).toBe("1");
+    expect(params.get("perpage")).toBe("40");
+    expect(params.get("sort")).toBe("oldest");
+    expect(params.get("q")).toBe("apl");
+    expect(params.get("pg")).toBe("1");
   });
 
   it("takes the input's value from the URL", () => {
@@ -76,6 +95,39 @@ describe("the advanced-options toggle", () => {
 
     expect(toggle()).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByLabelText("Event")).toBeInTheDocument();
+  });
+
+  it("stays open across a submit, with the filters still showing", async () => {
+    // The band alone does not load the roster, and the Event option does not
+    // exist until it has.
+    loadRosters();
+    await vi.waitFor(() => {
+      expect(rosters.status).toBe("loaded");
+    });
+    setUrl("/search/?event=dyalog-22");
+    searchPanel.open = true;
+    const { container } = render(SearchBar);
+
+    await fireEvent.input(screen.getByRole("searchbox"), {
+      target: { value: "apl" },
+    });
+    await fireEvent.submit(container.querySelector("form")!);
+
+    expect(toggle()).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByLabelText("Event")).toHaveValue("dyalog-22");
+  });
+
+  it("stays open across a submit when the user opened it with nothing set", async () => {
+    setUrl("/");
+    searchPanel.open = true;
+    const { container } = render(SearchBar);
+
+    await fireEvent.input(screen.getByRole("searchbox"), {
+      target: { value: "apl" },
+    });
+    await fireEvent.submit(container.querySelector("form")!);
+
+    expect(toggle()).toHaveAttribute("aria-expanded", "true");
   });
 
   it("leaves no panel control reachable by Tab while closed", async () => {

@@ -3,21 +3,26 @@
   import AdvancedOptions from "../browse/AdvancedOptions.svelte";
   import { assetsPrefix } from "../../lib/env";
   import Link from "../../lib/router/Link.svelte";
-  import { location, navigate } from "../../lib/router/location.svelte";
+  import { location } from "../../lib/router/location.svelte";
+  import { filters, setFilters } from "../../lib/state/filters.svelte";
   import { searchPanel } from "../../lib/state/searchPanel.svelte";
-  import { parseFilters } from "../../lib/utils/browseFilters";
-  import { performSearch } from "../../lib/utils/performSearch";
 
   const PANEL_ID = "video-library-advanced-options";
 
   // On a watch page the video title is the h1, so the band steps down to h2.
   const heading = $derived(location.pathname === "/watch/" ? "h2" : "h1");
 
-  // Follows the URL, so clicking a presenter name updates the box. Read
-  // through parseFilters: browseFilters.ts is the only home for the vocabulary.
-  const query = $derived(parseFilters(location.search).q);
+  // Follows the URL, so clicking a presenter name updates the box.
+  const query = $derived(filters.current.q);
 
-  const submit = performSearch(navigate);
+  // Only the query, merged over the URL so the panel's event, presenters and
+  // year range survive. The destination is always /search/, because a search
+  // box means search.
+  function submit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
+    event.preventDefault();
+    const q = String(new FormData(event.currentTarget).get("q") ?? "");
+    setFilters({ q }, { pathname: "/search/" });
+  }
 </script>
 
 <section class="band">
