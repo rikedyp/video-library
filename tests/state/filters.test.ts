@@ -62,6 +62,40 @@ describe("setFilters", () => {
     expect(currentParams().get("pg")).toBe("3");
   });
 
+  describe("the sort a patch does not name", () => {
+    it("follows a new query when nobody chose it", () => {
+      setUrl("/");
+
+      setFilters({ q: "apl" });
+
+      expect(currentParams().get("sort")).toBe("relevance");
+    });
+
+    it("holds a sort the user chose", () => {
+      setUrl("/?sort=oldest");
+
+      setFilters({ q: "apl" });
+
+      expect(currentParams().get("sort")).toBe("oldest");
+    });
+
+    it("returns to date order when the query goes away", () => {
+      setUrl("/search/?q=apl&sort=relevance");
+
+      setFilters({ q: "" });
+
+      expect(currentParams().get("sort")).toBe("newest");
+    });
+
+    it("gives way to a patch that names one", () => {
+      setUrl("/");
+
+      setFilters({ q: "apl", sort: "oldest" });
+
+      expect(currentParams().get("sort")).toBe("oldest");
+    });
+  });
+
   it("writes to the route the user is on", () => {
     setUrl("/watch/?v=vid001");
 
