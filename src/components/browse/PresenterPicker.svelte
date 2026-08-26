@@ -19,9 +19,8 @@
   const current = $derived(filters.current);
 
   /**
-   * Named while the roster is loading, `#412` once it is loaded and the id
-   * genuinely is not in it. Unnamed either way, the token stays removable: a
-   * filter the user cannot read is one they especially need to clear.
+   * Get presenter name using the ID via the presenters roster.
+   * If not found, presenter name is #<id>.
    */
   const selected = $derived(
     current.presenterIds.map((id) => ({
