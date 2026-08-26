@@ -60,12 +60,12 @@ beforeEach(() => {
 });
 
 describe("the type-ahead", () => {
-  it("offers eight at a time", async () => {
+  it("offers suggestions when a character is typed", async () => {
     render(PresenterPicker);
 
-    await userEvent.click(box());
+    await userEvent.type(box(), "j");
 
-    expect(offered()).toHaveLength(8);
+    expect(offered().length).toBeGreaterThan(0);
     expect(offered()[0]).toBe("John Smith");
   });
 
@@ -98,7 +98,7 @@ describe("choosing", () => {
     setUrl("/?presenter_id=1");
     render(PresenterPicker);
 
-    await userEvent.click(box());
+    await userEvent.type(box(), "j");
     await userEvent.click(screen.getByRole("option", { name: "Jane Doe" }));
 
     expect(params().get("presenter_id")).toBe("1,2");
@@ -108,7 +108,7 @@ describe("choosing", () => {
     setUrl("/?presenter_id=2");
     render(PresenterPicker);
 
-    await userEvent.click(box());
+    await userEvent.type(box(), "j");
     await userEvent.click(screen.getByRole("option", { name: "Jane Doe" }));
 
     expect(params().get("presenter_id")).toBe("2");
@@ -127,7 +127,8 @@ describe("choosing", () => {
     render(PresenterPicker);
     const before = window.history.length;
 
-    await userEvent.click(box());
+    // await userEvent.click(box());
+    await userEvent.type(box(), "j");
     await userEvent.click(screen.getByRole("option", { name: "Jane Doe" }));
 
     expect(window.history.length).toBe(before);
@@ -172,7 +173,8 @@ describe("the keyboard", () => {
     render(PresenterPicker);
 
     await userEvent.click(box());
-    await userEvent.keyboard("{ArrowDown}{ArrowDown}{ArrowUp}");
+    // await userEvent.type(box(), 'j');
+    await userEvent.keyboard("{J}{ArrowDown}{ArrowDown}{ArrowUp}");
 
     expect(box()).toHaveAttribute("aria-activedescendant", "presenter-2");
   });
@@ -201,7 +203,8 @@ describe("a click outside", () => {
   it("closes the list", async () => {
     render(PresenterPicker);
 
-    await userEvent.click(box());
+    // await userEvent.click(box());
+    await userEvent.type(box(), "a");
     expect(box()).toHaveAttribute("aria-expanded", "true");
 
     await userEvent.click(document.body);

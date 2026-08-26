@@ -92,7 +92,7 @@ describe("the three columns together", () => {
 
     await userEvent.selectOptions(screen.getByLabelText("From"), "2015");
     await userEvent.selectOptions(screen.getByLabelText("Event"), "dyalog-23");
-    await userEvent.click(screen.getByLabelText("Presenter"));
+    await userEvent.type(screen.getByLabelText("Presenter"), "j");
     await userEvent.click(screen.getByRole("option", { name: "Jane Doe" }));
 
     expect(params().get("from")).toBe("2015-01-01");

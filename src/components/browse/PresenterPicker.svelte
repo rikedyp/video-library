@@ -35,7 +35,7 @@
     const trimmed = query.trim().toLowerCase();
     const matching =
       trimmed === ""
-        ? rosters.presenters
+        ? []
         : rosters.presenters.filter((presenter) =>
             presenter.name.toLowerCase().includes(trimmed),
           );
@@ -130,7 +130,6 @@
       open = true;
       activeIndex = 0;
     }}
-    onfocus={() => (open = true)}
     onkeydown={onKeydown}
   />
 
