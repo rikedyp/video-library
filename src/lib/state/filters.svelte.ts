@@ -28,9 +28,10 @@ export const filters = {
 /**
  * Merge `patch` over the filters in the URL and navigate.
  *
- * `page` returns to 1 unless the patch names it: the page the user was on means
- * nothing under a different filter. An unchosen sort follows a changed `q` for
- * the same reason.
+ * `page` defaults to 1 because setFilters is triggered by a new search, but this can
+ * be overridden. For example, if a user clicks on a video /watch/ page and then goes
+ * back we return the user to their previous scroll position.
+ * `sort` default depends on search query: only a populated query has "relevance"
  */
 export function setFilters(
   patch: Partial<BrowseFilters>,
